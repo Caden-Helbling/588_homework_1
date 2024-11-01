@@ -55,12 +55,16 @@ print(f'Accuracy of the simple classifier: {accuracy * 100:.2f}%')
 color_map = {0: 'blue', 1: 'orange', 2: 'green'}
 labels_map = {0: 'Iris-setosa', 1: 'Iris-versicolor', 2: 'Iris-virginica'}
 
-# Create scatter plots for each attribute pair
-combinations = [('sepal_length', 'petal_length'), ('sepal_length', 'petal_width'),
-                ('sepal_width', 'petal_length'), ('sepal_width', 'petal_width'),
-                ('petal_length', 'petal_width')]
+# Create scatter plots for each attribute pair & add lines to separate types
+line_params = {
+    ('sepal_length', 'petal_length'): (0.5, 0),  # slope, intercept
+    ('sepal_length', 'petal_width'): (0, 0.75),
+    ('sepal_width', 'petal_length'): (0.5, 1.0),
+    ('sepal_width', 'petal_width'): (0.25, 0),
+    ('petal_length', 'petal_width'): (-0.5, 2)
+}
 
-for x_attr, y_attr in combinations:
+for (x_attr, y_attr), (slope, intercept) in line_params.items():
     plt.figure(figsize=(8, 6))
     
     # Plot each class with a specific color
@@ -70,8 +74,27 @@ for x_attr, y_attr in combinations:
     
     plt.xlabel(x_attr)
     plt.ylabel(y_attr)
+    plt.xlim(0, data_ordinal[x_attr].max() + 1)  # Set x-axis limit
+    plt.ylim(0, data_ordinal[y_attr].max() + 1)  # Set y-axis limit
     plt.legend(title="Species")
+    x_vals = np.array(plt.gca().get_xlim())  # Get the x-axis limits
+    y_vals = slope * x_vals + intercept
+    plt.plot(x_vals, y_vals, '--', color='red', label="Decision Boundary")
     plt.show()
+    # Define a function that uses line equations to classify
+def classify_linear(row):
+    # Example conditions based on the line equations
+    if row['petal_length'] < -0.5 * row['petal_width'] + 2:
+        return 'Iris-setosa'
+    elif row['petal_length'] < -0.5 * row['petal_width'] + 4:
+        return 'Iris-versicolor'
+    else:
+        return 'Iris-virginica'
+
+# Apply the classifier to each row and calculate accuracy
+data['linear_predicted_class'] = data.apply(classify_linear, axis=1)
+accuracy = (data['linear_predicted_class'] == data['iris_class']).mean()
+print(f'Accuracy of the linear classifier: {accuracy * 100:.2f}%')
 
 # KNN
 
@@ -82,21 +105,21 @@ allAcc=np.zeros(20)
 i=100
 for x in range(i):
 
-    #Split the data into 120 taining data and 30 query data
+    #Split the data into 120 training data and 30 query data
     from sklearn.model_selection import train_test_split
     train, test = train_test_split(data_ordinal, test_size=0.2)
 
     #convert training data to np array
     train_np = train.to_numpy()
 
-    #Put first four collums AKA features into a single array, and identifier on its own
+    #Put first four columns AKA features into a single array, and identifier on its own
     train_X = train_np[:, 0:4]
     train_Y = train_np[:, 4]
 
     #Run KNN with k=1 all the way to k=20 to see a pattern in how changing k will change accuracy
     for k in range(1,21):
 
-        #variables used to keep track of correct indentifications and total identifications
+        #variables used to keep track of correct identifications and total identifications
         correct=0 
         total=0
 
@@ -137,6 +160,22 @@ for acc in allAcc:
 
 """
 The most accurate k is always somewhere around k=13+-2
-k=1 is suprisingly more accurate than most of the other lower k's
+k=1 is surprisingly more accurate than most of the other lower k's
 Therefore if you need to have a low k, then k=1 may be best
 """
+
+# Calculate the average accuracy for each k value
+average_accuracy = allAcc / i  # Divide by the number of runs to get the average
+
+# Define the range of k values
+k_values = range(1, 21)
+
+# Plot the results
+plt.figure(figsize=(10, 6))
+plt.plot(k_values, average_accuracy, marker='o', linestyle='-', color='b')
+plt.title("KNN Accuracy for Different Values of k")
+plt.xlabel("k (Number of Neighbors)")
+plt.ylabel("Accuracy (%)")
+plt.xticks(k_values)  # Set x-axis ticks to each k value
+plt.grid(True)
+plt.show()
