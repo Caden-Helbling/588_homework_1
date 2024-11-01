@@ -57,7 +57,8 @@ labels_map = {0: 'Iris-setosa', 1: 'Iris-versicolor', 2: 'Iris-virginica'}
 
 # Create scatter plots for each attribute pair
 combinations = [('sepal_length', 'petal_length'), ('sepal_length', 'petal_width'),
-                ('sepal_width', 'petal_length'), ('sepal_width', 'petal_width')]
+                ('sepal_width', 'petal_length'), ('sepal_width', 'petal_width'),
+                ('petal_length', 'petal_width')]
 
 for x_attr, y_attr in combinations:
     plt.figure(figsize=(8, 6))
