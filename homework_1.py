@@ -74,3 +74,69 @@ for x_attr, y_attr in combinations:
     plt.show()
 
 # KNN
+
+#An array used to keep track of the accuracy of each run for all 20 k's
+allAcc=np.zeros(20)
+
+#Run the code i amount of times. This is for testing your data. It is easier than rerunning the program a ton
+i=100
+for x in range(i):
+
+    #Split the data into 120 taining data and 30 query data
+    from sklearn.model_selection import train_test_split
+    train, test = train_test_split(data_ordinal, test_size=0.2)
+
+    #convert training data to np array
+    train_np = train.to_numpy()
+
+    #Put first four collums AKA features into a single array, and identifier on its own
+    train_X = train_np[:, 0:4]
+    train_Y = train_np[:, 4]
+
+    #Run KNN with k=1 all the way to k=20 to see a pattern in how changing k will change accuracy
+    for k in range(1,21):
+
+        #variables used to keep track of correct indentifications and total identifications
+        correct=0 
+        total=0
+
+        #Loop through each testing value and run knn on it
+        for query in test.iloc:
+            #Delete the queries identifier but store it somewhere for later accuracy check
+            query = query.to_numpy()
+            ground_truth = query[4]
+            query = np.delete(query, 4)
+
+            #find the euclidean distance to each point, and end up in an array
+            diff = np.abs(train_X - query) 
+            square=np.square(diff)
+            sum_square = np.sum(square, axis=-1)
+            distance=np.sqrt(sum_square)
+
+            #Find the K nearest neighbors
+            idx = np.argpartition(distance, k)  #find the k smallest values in distance
+            knn = train_Y[idx[:k]]
+
+            #Predict the class based off the highest knn species
+            uni, count = np.unique(knn, return_counts=True)
+
+            #increment total and if it was correct increment correct
+            total=total+1
+            if uni[np.argmax(count)] == ground_truth:
+                correct=correct+1
+
+        #calculate the accuracy and add it into the array
+        accuracy=correct/total
+        allAcc[k-1]=allAcc[k-1]+(accuracy*100)
+
+#print out the avg accuracy for each k value for all runs combined
+k=1
+for acc in allAcc:
+    print(f'Accuracy of KNN with k={k} is {acc / i:.2f}%')
+    k=k+1
+
+"""
+The most accurate k is always somewhere around k=13+-2
+k=1 is suprisingly more accurate than most of the other lower k's
+Therefore if you need to have a low k, then k=1 may be best
+"""
