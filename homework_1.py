@@ -57,14 +57,14 @@ labels_map = {0: 'Iris-setosa', 1: 'Iris-versicolor', 2: 'Iris-virginica'}
 
 # Create scatter plots for each attribute pair & add lines to separate types
 line_params = {
-    ('sepal_length', 'petal_length'): (0.5, 0),  # slope, intercept
-    ('sepal_length', 'petal_width'): (0, 0.75),
-    ('sepal_width', 'petal_length'): (0.5, 1.0),
-    ('sepal_width', 'petal_width'): (0.25, 0),
-    ('petal_length', 'petal_width'): (-0.5, 2)
+    ('sepal_length', 'petal_length'): [(0.5, .25), (0, 3.18)],  # slopes, intercepts
+    ('sepal_length', 'petal_width'): [(0, .08),(.75, 1.18)],
+    ('sepal_width', 'petal_length'): [(0.5, .2),(1, 4.1)],
+    ('sepal_width', 'petal_width'): [(0.25, .15),(0, 1.25)],
+    ('petal_length', 'petal_width'): [(-0.5, 0),(2, 1.65)]
 }
 
-for (x_attr, y_attr), (slope, intercept) in line_params.items():
+for (x_attr, y_attr), (slopes, intercepts) in line_params.items():
     plt.figure(figsize=(8, 6))
     
     # Plot each class with a specific color
@@ -77,16 +77,17 @@ for (x_attr, y_attr), (slope, intercept) in line_params.items():
     plt.xlim(0, data_ordinal[x_attr].max() + 1)  # Set x-axis limit
     plt.ylim(0, data_ordinal[y_attr].max() + 1)  # Set y-axis limit
     plt.legend(title="Species")
-    x_vals = np.array(plt.gca().get_xlim())  # Get the x-axis limits
-    y_vals = slope * x_vals + intercept
-    plt.plot(x_vals, y_vals, '--', color='red', label="Decision Boundary")
+    for index in range(len(slopes)):
+        x_vals = np.array(plt.gca().get_xlim())  # Get the x-axis limits
+        y_vals = slopes[index] * x_vals + intercepts[index]
+        plt.plot(x_vals, y_vals, '--', color='red', label="Decision Boundary")
     plt.show()
     # Define a function that uses line equations to classify
 def classify_linear(row):
     # Example conditions based on the line equations
-    if row['petal_length'] < -0.5 * row['petal_width'] + 2:
+    if row['petal_length'] < 0.5 * row['sepal_length'] + 0:
         return 'Iris-setosa'
-    elif row['petal_length'] < -0.5 * row['petal_width'] + 4:
+    elif row['petal_length'] < .25 * row['sepal_length'] + 3.18:
         return 'Iris-versicolor'
     else:
         return 'Iris-virginica'
@@ -173,7 +174,7 @@ k_values = range(1, 21)
 # Plot the results
 plt.figure(figsize=(10, 6))
 plt.plot(k_values, average_accuracy, marker='o', linestyle='-', color='b')
-plt.title("KNN Accuracy for Different Values of k")
+plt.title("KNN Accuracy for Different Values of k over "+ str(i) +" runs")
 plt.xlabel("k (Number of Neighbors)")
 plt.ylabel("Accuracy (%)")
 plt.xticks(k_values)  # Set x-axis ticks to each k value
